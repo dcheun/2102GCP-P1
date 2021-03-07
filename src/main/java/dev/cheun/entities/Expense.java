@@ -1,24 +1,51 @@
 package dev.cheun.entities;
 
 import dev.cheun.utils.DateTimeUtil;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.SelectBeforeUpdate;
 
+import javax.persistence.*;
 import java.time.OffsetDateTime;
 
+@Entity
+@Table(name="expense")
+@DynamicUpdate
+@SelectBeforeUpdate
 public class Expense {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")
     private int id;
+
+    @Column(name="amount_in_cents")
     private int amountInCents;
+
+    @Column(name="reason")
     private String reason;
+
+    @Column(name="submitted_at")
     private OffsetDateTime submittedAt;
+
+    @Column(name="mgr_reviewed_at")
     private OffsetDateTime mgrReviewedAt;
+
+    @Column(name="status_id")
+    @JoinColumn(name="status_id")
     private int statusId;
+
+    @Column(name="employee_id")
+    @JoinColumn(name="employee_id")
     private int employeeId;
-    private int managerId;
+
+    @Column(name="manager_id")
+    @JoinColumn(name="manager_id")
+    private Integer managerId;
 
     public Expense(){}
 
     public Expense(int id, int amountInCents, String reason,
                    OffsetDateTime submittedAt, OffsetDateTime mgrReviewedAt,
-                   int statusId, int employeeId, int managerId) {
+                   int statusId, int employeeId, Integer managerId) {
         this.id = id;
         this.amountInCents = amountInCents;
         this.reason = reason;
@@ -31,7 +58,7 @@ public class Expense {
 
     public Expense(int id, int amountInCents, int employeeId) {
         this(id, amountInCents, null, DateTimeUtil.getOffsetDateTimeUtcNow(),
-                null, 1, employeeId, 0);
+                null, 1, employeeId, null);
     }
 
     public int getId() {
@@ -75,7 +102,7 @@ public class Expense {
     }
 
     public int getStatusId() {
-        return statusId;
+        return this.statusId;
     }
 
     public void setStatusId(int statusId) {
@@ -83,7 +110,7 @@ public class Expense {
     }
 
     public int getEmployeeId() {
-        return employeeId;
+        return this.employeeId;
     }
 
     public void setEmployeeId(int employeeId) {
@@ -91,10 +118,10 @@ public class Expense {
     }
 
     public int getManagerId() {
-        return managerId;
+        return this.managerId;
     }
 
-    public void setManagerId(int managerId) {
+    public void setManagerId(Integer managerId) {
         this.managerId = managerId;
     }
 
