@@ -1,22 +1,20 @@
 package dev.cheun.daotests;
 
 import dev.cheun.daos.AppUserDAO;
-import dev.cheun.daos.AppUserDaoPostgres;
+import dev.cheun.daos.AppUserDaoHibernate;
 import dev.cheun.daos.ExpenseDAO;
-import dev.cheun.daos.ExpenseDaoPostgres;
+import dev.cheun.daos.ExpenseDaoHibernate;
 import dev.cheun.entities.AppUser;
 import dev.cheun.entities.Expense;
 import dev.cheun.utils.DateTimeUtil;
 import org.junit.jupiter.api.*;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Set;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ExpenseDaoTests {
-    private static final ExpenseDAO dao = new ExpenseDaoPostgres();
-    private static final AppUserDAO aDao = new AppUserDaoPostgres();
+public class ExpenseDaoHibernateTests {
+    private static final ExpenseDAO dao = new ExpenseDaoHibernate();
+    private static final AppUserDAO aDao = new AppUserDaoHibernate();
     private static AppUser testEmp = null;
     private static AppUser testMgr = null;
     private static Expense testE1 = null;
@@ -26,10 +24,29 @@ public class ExpenseDaoTests {
     @BeforeAll
     public static void setUpOnce() {
         // Set up test resources.
-        AppUser ron = new AppUser(0,"Ron","Weasley","rweasley@hogwarts.edu",1, "weasley123");
-        AppUser hagrid = new AppUser(0, "Rubeus", "Hagrid", "rhagrid@hogwarts.edu", 2, "hagrid123");
+        AppUser ron = new AppUser(
+                0,
+                "Ron",
+                "Weasley",
+                "rweasley@hogwarts.edu",
+                1,
+                "weasley123");
+        AppUser hagrid = new AppUser(
+                0,
+                "Rubeus",
+                "Hagrid",
+                "rhagrid@hogwarts.edu",
+                2,
+                "hagrid123");
         testEmp = aDao.createAppUser(ron);
         testMgr = aDao.createAppUser(hagrid);
+    }
+
+    @AfterAll
+    public static void tearDownOnce() {
+        // Clean up test resources.
+        aDao.deleteAppUserById(testEmp.getId());
+        aDao.deleteAppUserById(testMgr.getId());
     }
 
     @Test
@@ -47,8 +64,7 @@ public class ExpenseDaoTests {
     @Test
     @Order(2)
     void get_expense_by_id() {
-        int id = testE1.getId();
-        Expense expense = dao.getExpenseById(id);
+        Expense expense = dao.getExpenseById(testE1.getId());
         Assertions.assertEquals(testE1.getEmployeeId(), expense.getEmployeeId());
         Assertions.assertEquals(testE1.getAmountInCents(), expense.getAmountInCents());
     }
@@ -72,10 +88,10 @@ public class ExpenseDaoTests {
     @Test
     @Order(4)
     void get_all_expenses() {
-         testE2 = new Expense(
-                 0,
-                 20_000,
-                 testEmp.getId());
+        testE2 = new Expense(
+                0,
+                20_000,
+                testEmp.getId());
         testE3 = new Expense(
                 0,
                 30_000,
@@ -94,12 +110,5 @@ public class ExpenseDaoTests {
         Assertions.assertTrue(dao.deleteExpenseById(testE1.getId()));
         Assertions.assertTrue(dao.deleteExpenseById(testE2.getId()));
         Assertions.assertTrue(dao.deleteExpenseById(testE3.getId()));
-    }
-
-    @AfterAll
-    public static void tearDownOnce() {
-        // Clean up test resources.
-        aDao.deleteAppUserById(testEmp.getId());
-        aDao.deleteAppUserById(testMgr.getId());
     }
 }

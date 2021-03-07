@@ -6,12 +6,12 @@ import java.util.Set;
 
 public interface AppUserDAO {
     // Create
-    AppUser createAppUser(AppUser appUser, String pw);
+    AppUser createAppUser(AppUser appUser);
 
     // Read
     Set<AppUser> getAllAppUsers();
     AppUser getAppUserById(int id);
-    AppUser authenticate(AppUser appUser, String pw);
+    AppUser authenticate(AppUser appUser);
 
     // Update
     AppUser updateAppUser(AppUser appUser);

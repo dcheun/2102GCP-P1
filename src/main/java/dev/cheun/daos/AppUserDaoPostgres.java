@@ -3,6 +3,7 @@ package dev.cheun.daos;
 import dev.cheun.entities.AppUser;
 import dev.cheun.exceptions.NotAuthenticatedException;
 import dev.cheun.exceptions.NotFoundException;
+import dev.cheun.utils.AppUtil;
 import dev.cheun.utils.ConnectionUtil;
 import org.apache.log4j.Logger;
 
@@ -15,7 +16,7 @@ public class AppUserDaoPostgres implements AppUserDAO {
     private static final Logger logger = Logger.getLogger(AppUserDaoPostgres.class.getName());
 
     @Override
-    public AppUser createAppUser(AppUser appUser, String pw) {
+    public AppUser createAppUser(AppUser appUser) {
         // Try with resources syntax.
         // Java will always close the object to prevent resource leaks.
         try (Connection conn = ConnectionUtil.createConnection()) {
@@ -30,8 +31,8 @@ public class AppUserDaoPostgres implements AppUserDAO {
             ps.setString(1, appUser.getFname());
             ps.setString(2, appUser.getLname());
             ps.setString(3, appUser.getEmail());
-            ps.setInt(4, appUser.getUserRole());
-            ps.setString(5, pw);
+            ps.setInt(4, appUser.getRoleId());
+            ps.setString(5, appUser.getPw());
             ps.execute();
             // Return the val of the generated keys.
             ResultSet rs = ps.getGeneratedKeys();
@@ -41,8 +42,7 @@ public class AppUserDaoPostgres implements AppUserDAO {
             logger.info("createAppUser: " + appUser);
             return appUser;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("createAppUser: " + e.getMessage());
+            AppUtil.logException(logger, e, "createAppUser: Unable to create");
             return null;
         }
     }
@@ -63,14 +63,13 @@ public class AppUserDaoPostgres implements AppUserDAO {
                 appUser.setFname(rs.getString("fname"));
                 appUser.setLname(rs.getString("lname"));
                 appUser.setEmail(rs.getString("email"));
-                appUser.setUserRole(rs.getInt("user_role"));
+                appUser.setRoleId(rs.getInt("user_role"));
                 appUsers.add(appUser);
             }
             logger.info("getAllAppUsers: size=" + appUsers.size());
             return appUsers;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("getAllAppUsers: " + e.getMessage());
+            AppUtil.logException(logger, e, "getAllAppUsers: Unable to retrieve");
             return null;
         }
     }
@@ -90,27 +89,26 @@ public class AppUserDaoPostgres implements AppUserDAO {
             appUser.setFname(rs.getString("fname"));
             appUser.setLname(rs.getString("lname"));
             appUser.setEmail(rs.getString("email"));
-            appUser.setUserRole(rs.getInt("user_role"));
+            appUser.setRoleId(rs.getInt("user_role"));
             logger.info("getAppUserById: id=" + id);
             return appUser;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("getAppUserById: Unable to get record with id=" + id);
-            logger.error(e.getMessage());
+            AppUtil.logException(logger, e, "getAppUserById: Unable to get record with id=" + id);
             return null;
         }
     }
 
     @Override
-    public AppUser authenticate(AppUser appUser, String pw) {
+    public AppUser authenticate(AppUser appUser) {
         try(Connection conn = ConnectionUtil.createConnection()) {
             String sql = "SELECT * FROM app_user WHERE email = ? and " +
                     "pw = crypt(?, pw)";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, appUser.getEmail());
-            ps.setString(2, pw);
+            ps.setString(2, appUser.getPw());
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
+                logger.warn("authenticate: Failed to authenticate: " + appUser);
                 throw new NotAuthenticatedException("Failed to authenticate user");
             }
             AppUser authedUser = new AppUser();
@@ -118,12 +116,11 @@ public class AppUserDaoPostgres implements AppUserDAO {
             authedUser.setFname(rs.getString("fname"));
             authedUser.setLname(rs.getString("lname"));
             authedUser.setEmail(rs.getString("email"));
-            authedUser.setUserRole(rs.getInt("user_role"));
+            authedUser.setRoleId(rs.getInt("user_role"));
             logger.info("authenticate: " + appUser);
             return authedUser;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("authenticate: " + e.getMessage());
+            AppUtil.logException(logger, e, "authenticate: Unable to authenticate user");
             return null;
         }
     }
@@ -138,7 +135,7 @@ public class AppUserDaoPostgres implements AppUserDAO {
             ps.setString(1, appUser.getFname());
             ps.setString(2, appUser.getLname());
             ps.setString(3, appUser.getEmail());
-            ps.setInt(4, appUser.getUserRole());
+            ps.setInt(4, appUser.getRoleId());
             ps.setInt(5, appUser.getId());
             int rowCount = ps.executeUpdate();
             if (rowCount == 0) {
@@ -147,9 +144,7 @@ public class AppUserDaoPostgres implements AppUserDAO {
             logger.info("updateAppUser: " + appUser);
             return appUser;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("updateAppUser: Unable to update: " + appUser);
-            logger.error(e.getMessage());
+            AppUtil.logException(logger, e, "updateAppUser: Unable to update user");
             return null;
         }
     }
@@ -167,9 +162,8 @@ public class AppUserDaoPostgres implements AppUserDAO {
             logger.info("deleteAppUserById: id=" + id);
             return true;
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("deleteAppUserById: Unable to delete record with id=" + id);
-            logger.error(e.getMessage());
+            AppUtil.logException(logger, e,
+                    "deleteAppUserById: Unable to delete user with id=" + id);
             return false;
         }
     }
