@@ -23,10 +23,10 @@ public class ExpenseServiceTests {
     @BeforeAll
     public static void setUpOnce() {
         // Set up test resources.
-        AppUser ron = new AppUser(0, "Ron", "Weasley", "rweasley@hogwarts.edu", 1);
-        AppUser hagrid = new AppUser(0, "Rubeus", "Hagrid", "rhagrid@hogwarts.edu", 2);
-        testEmp = aServ.registerAppUser(ron, "weasley123");
-        testMgr = aServ.registerAppUser(hagrid, "hagrid123");
+        AppUser ron = new AppUser(0, "Ron", "Weasley", "rweasley@hogwarts.edu", 1, "weasley123");
+        AppUser hagrid = new AppUser(0, "Rubeus", "Hagrid", "rhagrid@hogwarts.edu", 2, "hagrid123");
+        testEmp = aServ.registerAppUser(ron);
+        testMgr = aServ.registerAppUser(hagrid);
     }
 
     @AfterAll

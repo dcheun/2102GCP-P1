@@ -3,8 +3,6 @@ package dev.cheun.services;
 import dev.cheun.daos.AppUserDaoPostgres;
 import dev.cheun.daos.ExpenseDAO;
 import dev.cheun.entities.Expense;
-import dev.cheun.exceptions.BadRequestException;
-import dev.cheun.exceptions.NotAuthenticatedException;
 import dev.cheun.exceptions.NotAuthorizedException;
 import dev.cheun.exceptions.NotFoundException;
 

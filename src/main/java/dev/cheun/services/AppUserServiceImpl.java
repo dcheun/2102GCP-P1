@@ -19,8 +19,8 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     @Override
-    public AppUser registerAppUser(AppUser appUser, String pw) {
-        return this.dao.createAppUser(appUser, pw);
+    public AppUser registerAppUser(AppUser appUser) {
+        return this.dao.createAppUser(appUser);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public AppUser getEmployeeById(int employeeId) {
         AppUser appUser = getAppUserById(employeeId);
-        if (appUser.getUserRole() == 1) {
+        if (appUser.getRoleId() == 1) {
             return appUser;
         }
         throw new NotFoundException("No such employee exists");
@@ -57,7 +57,7 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public AppUser getManagerById(int managerId) {
         AppUser appUser = getAppUserById(managerId);
-        if (appUser.getUserRole() == 2) {
+        if (appUser.getRoleId() == 2) {
             return appUser;
         }
         throw new NotFoundException("No such manager exists");
@@ -75,8 +75,8 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     @Override
-    public AppUser authenticate(AppUser appUser, String pw) {
-        return this.dao.authenticate(appUser, pw);
+    public AppUser authenticate(AppUser appUser) {
+        return this.dao.authenticate(appUser);
     }
 
     @Override

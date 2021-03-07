@@ -6,7 +6,7 @@ import java.util.Set;
 
 public interface AppUserService {
     // CREATE
-    AppUser registerAppUser(AppUser appUser, String pw);
+    AppUser registerAppUser(AppUser appUser);
 
     // READ
     Set<AppUser> getAllAppUsers();
@@ -15,7 +15,7 @@ public interface AppUserService {
     AppUser getEmployeeById(int employeeId);
     AppUser getManagerById(int managerId);
     AppUser getAppUserByEmail(String email);
-    AppUser authenticate(AppUser appUser, String pw);
+    AppUser authenticate(AppUser appUser);
 
     // UPDATE
     AppUser updateAppUser(AppUser appUser);

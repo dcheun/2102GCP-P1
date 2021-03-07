@@ -27,11 +27,12 @@ public class LoginController {
         AppUser authUser;
         try {
             appUser = aServ.getAppUserByEmail(username);
-            authUser = aServ.authenticate(appUser, password);
+            appUser.setPw(password);
+            authUser = aServ.authenticate(appUser);
         } catch (NotFoundException | NotAuthenticatedException e) {
             throw new UnauthorizedResponse("Failed to authenticate user");
         }
-        String jwt = JwtUtil.generate(authUser.getId(), authUser.getUserRole());
+        String jwt = JwtUtil.generate(authUser.getId(), authUser.getRoleId());
         ctx.cookie("2102GCP_P1_jwt", jwt, 10000);
     };
 }

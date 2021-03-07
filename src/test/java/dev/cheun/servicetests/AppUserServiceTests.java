@@ -19,11 +19,11 @@ public class AppUserServiceTests {
     @Test
     @Order(1)
     void register_app_user() {
-        testA1 = new AppUser(0, "Ron", "Weasley", "rweasley@hogwarts.edu", 1);
-        testA2 = new AppUser(0, "Rubeus", "Hagrid", "rhagrid@hogwarts.edu", 2);
+        testA1 = new AppUser(0, "Ron", "Weasley", "rweasley@hogwarts.edu", 1, "weasley123");
+        testA2 = new AppUser(0, "Rubeus", "Hagrid", "rhagrid@hogwarts.edu", 2, "hagrid123");
 
-        serv.registerAppUser(testA1, "weasley123");
-        serv.registerAppUser(testA2, "hagrid123");
+        serv.registerAppUser(testA1);
+        serv.registerAppUser(testA2);
 
         Assertions.assertNotEquals(0, testA1.getId());
         Assertions.assertNotNull(testA1.getEmail());

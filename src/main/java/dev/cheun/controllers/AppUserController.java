@@ -44,7 +44,12 @@ public class AppUserController {
         JsonObject jobj = gson.fromJson(body, JsonObject.class);
         String pw = jobj.get("pw").getAsString();
         AppUser appUser = gson.fromJson(body, AppUser.class);
-        AppUser newUser = this.appUserService.registerAppUser(appUser, pw);
+        appUser.setPw(pw);
+        AppUser newUser = this.appUserService.registerAppUser(appUser);
+        if (newUser == null) {
+            ctx.status(500).result("Unable to create user");
+            return;
+        }
         ctx.status(201).result(gson.toJson(newUser));
     };
 

@@ -14,10 +14,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 @ExtendWith(MockitoExtension.class)
 public class JwtTests {
     private static AppUser emp = null;
@@ -34,14 +30,16 @@ public class JwtTests {
                 "Ron",
                 "Weasley",
                 "rweasley@hogwarts.edu",
-                1
+                1,
+                "weasley123"
         );
         mgr = new AppUser(
                 2,
                 "Rubeus",
                 "Hagrid",
                 "rhagrid@hotwarts.edu",
-                2
+                2,
+                "hagrid123"
         );
         aServ = new AppUserServiceImpl(aDao);
     }
@@ -50,7 +48,7 @@ public class JwtTests {
     void create_jwt_emp() {
         Mockito.when(aDao.getAppUserById(1)).thenReturn(emp);
         AppUser emp = aDao.getAppUserById(1);
-        String jwt = JwtUtil.generate(emp.getId(), emp.getUserRole());
+        String jwt = JwtUtil.generate(emp.getId(), emp.getRoleId());
         Assertions.assertNotNull(jwt);
     }
 
@@ -58,7 +56,7 @@ public class JwtTests {
     void create_jwt_mgr() {
         Mockito.when(aDao.getAppUserById(2)).thenReturn(mgr);
         AppUser mgr = aDao.getAppUserById(2);
-        String jwt = JwtUtil.generate(mgr.getId(), mgr.getUserRole());
+        String jwt = JwtUtil.generate(mgr.getId(), mgr.getRoleId());
         Assertions.assertNotNull(jwt);
     }
 
@@ -66,7 +64,7 @@ public class JwtTests {
     void decode_jwt() {
         Mockito.when(aDao.getAppUserById(1)).thenReturn(emp);
         AppUser emp = aDao.getAppUserById(1);
-        String encJwt = JwtUtil.generate(emp.getId(), emp.getUserRole());
+        String encJwt = JwtUtil.generate(emp.getId(), emp.getRoleId());
         DecodedJWT jwt = JwtUtil.isValidJWT(encJwt);
         int userId = jwt.getClaim("sub").asInt();
         int roleId = jwt.getClaim("role").asInt();
