@@ -1,6 +1,7 @@
 package dev.cheun.daos;
 
 import dev.cheun.entities.AppUserRole;
+import dev.cheun.exceptions.NotFoundException;
 import dev.cheun.utils.AppUtil;
 import dev.cheun.utils.HibernateUtil;
 import org.apache.log4j.Logger;
@@ -12,6 +13,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class AppUserRoleDaoHibernate implements AppUserRoleDAO {
@@ -41,7 +43,14 @@ public class AppUserRoleDaoHibernate implements AppUserRoleDAO {
             Root<AppUserRole> root = query.from(AppUserRole.class);
             query.select(root);
             Query<AppUserRole> q = sess.createQuery(query);
-            Set<AppUserRole> roles = new HashSet<>(q.getResultList());
+            List<AppUserRole> list = q.getResultList();
+            Set<AppUserRole> roles = new HashSet<>();
+            // Disable nested objects for now.
+            // This errors out in the controller when converting object to json.
+            for (AppUserRole role : list) {
+                role.setUsers(null);
+                roles.add(role);
+            }
             logger.info("getAllAppUserRoles: size=" + roles.size());
             return roles;
         } catch (Exception e) {
@@ -53,10 +62,20 @@ public class AppUserRoleDaoHibernate implements AppUserRoleDAO {
     @Override
     public AppUserRole getAppUserRoleById(int id) {
         try (Session sess = sf.openSession()) {
+            AppUserRole role = sess.get(AppUserRole.class, id);
+            if (role == null) {
+                throw new NotFoundException("No such role exists");
+            }
+            // Disable nested objects for now.
+            role.setUsers(null);
             logger.info("getAppUserRoleById: id=" + id);
-            return sess.get(AppUserRole.class, id);
+            return role;
+        } catch (NotFoundException e) {
+            logger.warn("getAppUserRoleById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
-            AppUtil.logException(logger, e, "getAppUserRoleById: Unable to get record with id=" + id);
+            AppUtil.logException(logger, e,
+                    "getAppUserRoleById: Unable to get record with id=" + id);
             return null;
         }
     }
@@ -84,7 +103,8 @@ public class AppUserRoleDaoHibernate implements AppUserRoleDAO {
             logger.info("deleteAppUserRoleById: id=" + id);
             return true;
         } catch (Exception e) {
-            AppUtil.logException(logger, e, "deleteAppUserRoleById: Unable to delete record with id=" + id);
+            AppUtil.logException(logger, e,
+                    "deleteAppUserRoleById: Unable to delete record with id=" + id);
             return false;
         }
     }

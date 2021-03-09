@@ -1,6 +1,7 @@
 package dev.cheun.daos;
 
 import dev.cheun.entities.Expense;
+import dev.cheun.exceptions.NotFoundException;
 import dev.cheun.utils.AppUtil;
 import dev.cheun.utils.HibernateUtil;
 import org.apache.log4j.Logger;
@@ -54,8 +55,16 @@ public class ExpenseDaoHibernate implements ExpenseDAO {
     @Override
     public Expense getExpenseById(int id) {
         try (Session sess = sf.openSession()) {
+            Expense expense = sess.get(Expense.class, id);
+            // null means no record was found.
+            if (expense == null) {
+                throw new NotFoundException("No such expense exists");
+            }
             logger.info("getExpenseById: id=" + id);
-            return sess.get(Expense.class, id);
+            return expense;
+        } catch (NotFoundException e) {
+            logger.warn("getExpenseById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
                     "getExpenseById: Unable to get record with id=" + id);
@@ -67,10 +76,16 @@ public class ExpenseDaoHibernate implements ExpenseDAO {
     public Expense updateExpense(Expense expense) {
         try (Session sess = sf.openSession()) {
             sess.beginTransaction();
+            // Check if record exists.
+            // Throws a NotFoundException if not found.
+            getExpenseById(expense.getId());
             sess.update(expense);
             sess.getTransaction().commit();
             logger.info("updateExpense: " + expense);
             return expense;
+        } catch (NotFoundException e) {
+            logger.warn("updateExpense: Not found: id=" + expense.getId());
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e, "updateExpense: Unable to update");
             return null;
@@ -81,10 +96,14 @@ public class ExpenseDaoHibernate implements ExpenseDAO {
     public boolean deleteExpenseById(int id) {
         try (Session sess = sf.openSession()) {
             sess.beginTransaction();
+            // getExpenseById will throw NotFoundException if id doesn't exist.
             sess.delete(getExpenseById(id));
             sess.getTransaction().commit();
             logger.info("deleteExpenseById: id=" + id);
             return true;
+        } catch (NotFoundException e) {
+            logger.warn("deleteExpenseById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
                     "deleteExpenseById: Unable to delete user with id=" + id);

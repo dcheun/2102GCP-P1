@@ -93,7 +93,8 @@ public class AppUserDaoPostgres implements AppUserDAO {
             logger.info("getAppUserById: id=" + id);
             return appUser;
         } catch (SQLException e) {
-            AppUtil.logException(logger, e, "getAppUserById: Unable to get record with id=" + id);
+            AppUtil.logException(logger, e,
+                    "getAppUserById: Unable to get record with id=" + id);
             return null;
         }
     }

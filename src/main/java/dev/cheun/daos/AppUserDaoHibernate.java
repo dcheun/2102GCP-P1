@@ -2,6 +2,7 @@ package dev.cheun.daos;
 
 import dev.cheun.entities.AppUser;
 import dev.cheun.exceptions.NotAuthenticatedException;
+import dev.cheun.exceptions.NotFoundException;
 import dev.cheun.utils.AppUtil;
 import dev.cheun.utils.HibernateUtil;
 import org.apache.log4j.Logger;
@@ -58,8 +59,16 @@ public class AppUserDaoHibernate implements AppUserDAO {
     @Override
     public AppUser getAppUserById(int id) {
         try (Session sess = sf.openSession()) {
+            AppUser user = sess.get(AppUser.class, id);
+            // null means no record was found.
+            if (user == null) {
+                throw new NotFoundException("No such user exists");
+            }
             logger.info("getAppUserById: id=" + id);
-            return sess.get(AppUser.class, id);
+            return user;
+        } catch (NotFoundException e) {
+            logger.warn("getAppUserById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
                     "getAppUserById: Unable to get record with id=" + id);
@@ -74,13 +83,14 @@ public class AppUserDaoHibernate implements AppUserDAO {
                     "', pw) FROM app_user WHERE id = " + appUser.getId();
             Query query = sess.createSQLQuery(sql);
             List<Boolean> row = query.list();
+            // Postgres will return true if password matches, otherwise false.
             if (!row.get(0)) {
-                logger.warn("authenticate: Failed to authenticate: " + appUser);
                 throw new NotAuthenticatedException("Failed to authenticate user");
             }
             logger.info("authenticate: " + appUser);
             return appUser;
         } catch (NotAuthenticatedException e) {
+            logger.warn("authenticate: Failed to authenticate: " + appUser);
             throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
@@ -93,10 +103,16 @@ public class AppUserDaoHibernate implements AppUserDAO {
     public AppUser updateAppUser(AppUser appUser) {
         try (Session sess = sf.openSession()) {
             sess.beginTransaction();
+            // This simply checks if the user id exists.
+            // Throws a NotFoundException
+            getAppUserById(appUser.getId());
             sess.update(appUser);
             sess.getTransaction().commit();
             logger.info("updateAppUser: " + appUser);
             return appUser;
+        } catch (NotFoundException e) {
+            logger.warn("updateAppUser: Not found: id=" + appUser.getId());
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e, "updateAppUser: Unable to update");
             return null;
@@ -107,10 +123,14 @@ public class AppUserDaoHibernate implements AppUserDAO {
     public boolean deleteAppUserById(int id) {
         try (Session sess = sf.openSession()) {
             sess.beginTransaction();
+            // getAppUserById will throw NotFoundException if id doesn't exist.
             sess.delete(getAppUserById(id));
             sess.getTransaction().commit();
             logger.info("deleteAppUserById: id=" + id);
             return true;
+        } catch (NotFoundException e) {
+            logger.warn("deleteAppUserById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
                     "deleteAppUserById: Unable to delete user with id=" + id);

@@ -1,6 +1,7 @@
 package dev.cheun.daos;
 
 import dev.cheun.entities.ExpenseStatus;
+import dev.cheun.exceptions.NotFoundException;
 import dev.cheun.utils.AppUtil;
 import dev.cheun.utils.HibernateUtil;
 import org.apache.log4j.Logger;
@@ -12,6 +13,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ExpenseStatusDaoHibernate implements ExpenseStatusDAO {
@@ -41,11 +43,19 @@ public class ExpenseStatusDaoHibernate implements ExpenseStatusDAO {
             Root<ExpenseStatus> root = query.from(ExpenseStatus.class);
             query.select(root);
             Query<ExpenseStatus> q = sess.createQuery(query);
-            Set<ExpenseStatus> expenseStatuses = new HashSet<>(q.getResultList());
+            List<ExpenseStatus> list = q.getResultList();
+            Set<ExpenseStatus> expenseStatuses = new HashSet<>();
+            // Disable nested objects for now, as they are causing errors in
+            // the controller when the object is converted to json.
+            for (ExpenseStatus status : list) {
+                status.setExpenses(null);
+                expenseStatuses.add(status);
+            }
             logger.info("getAllExpenseStatuses: size=" + expenseStatuses.size());
             return expenseStatuses;
         } catch (Exception e) {
-            AppUtil.logException(logger, e, "getAllExpenseStatus: Unable to retrieve");
+            AppUtil.logException(logger, e,
+                    "getAllExpenseStatus: Unable to retrieve");
             return null;
         }
     }
@@ -53,8 +63,17 @@ public class ExpenseStatusDaoHibernate implements ExpenseStatusDAO {
     @Override
     public ExpenseStatus getExpenseStatusById(int id) {
         try (Session sess = sf.openSession()) {
+            ExpenseStatus status = sess.get(ExpenseStatus.class, id);
+            if (status == null) {
+                throw new NotFoundException("No such status exists");
+            }
+            // Disable nested objects for now.
+            status.setExpenses(null);
             logger.info("getExpenseStatusById: id=" + id);
             return sess.get(ExpenseStatus.class, id);
+        } catch (NotFoundException e) {
+            logger.warn("getExpenseStatusById: Not found: id=" + id);
+            throw e;
         } catch (Exception e) {
             AppUtil.logException(logger, e,
                     "getExpenseStatusById: Unable to get record with id=" + id);
