@@ -1,8 +1,6 @@
 package dev.cheun.app;
 
-import dev.cheun.controllers.AppUserController;
-import dev.cheun.controllers.ExpenseController;
-import dev.cheun.controllers.LoginController;
+import dev.cheun.controllers.*;
 import io.javalin.Javalin;
 
 public class App {
@@ -10,11 +8,17 @@ public class App {
         Javalin app = Javalin.create();
 
         AppUserController userController = new AppUserController();
-        LoginController loginController = new LoginController();
+        AppUserRoleController roleController = new AppUserRoleController();
         ExpenseController expenseController = new ExpenseController();
+        ExpenseStatusController statusController = new ExpenseStatusController();
+        LoginController loginController = new LoginController();
 
         app.get("/users", userController.getAllAppUsersHandler);
         app.get("/users/:id", userController.getAppUserByIdHandler);
+        app.get("/user-roles", roleController.getAllRolesHandler);
+        app.get("/user-roles/:id", roleController.getRoleByIdHandler);
+        app.get("/expense-statuses", statusController.getAllStatusesHandler);
+        app.get("/expense-statuses/:id", statusController.getStatusByIdHandler);
 
         app.get("/users/:id/expenses", expenseController.getExpenseByUserIdHandler);
         app.get("/users/:id/expenses/:eid", expenseController.getExpenseByIdHandler);
