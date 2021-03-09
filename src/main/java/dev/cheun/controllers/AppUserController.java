@@ -2,7 +2,7 @@ package dev.cheun.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import dev.cheun.daos.AppUserDaoPostgres;
+import dev.cheun.daos.AppUserDaoHibernate;
 import dev.cheun.entities.AppUser;
 import dev.cheun.exceptions.NotFoundException;
 import dev.cheun.services.AppUserService;
@@ -15,7 +15,8 @@ import java.util.Set;
 // All logic in controller should deal with the API.
 // Controller should call services to perform the actions.
 public class AppUserController {
-    private AppUserService appUserService = new AppUserServiceImpl(new AppUserDaoPostgres());
+    private final AppUserService appUserService = new AppUserServiceImpl(
+            new AppUserDaoHibernate());
 
     public Handler getAllAppUsersHandler = ctx -> {
         Set<AppUser> allAppUsers = this.appUserService.getAllAppUsers();
@@ -52,13 +53,4 @@ public class AppUserController {
         }
         ctx.status(201).result(gson.toJson(newUser));
     };
-
-    public Handler updateAppUserHandler = ctx -> {
-       int id = Integer.parseInt(ctx.pathParam("id"));
-       String body = ctx.body();
-       Gson gson = new Gson();
-       // Convert JSON to Java object.
-    };
 }
-
-

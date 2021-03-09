@@ -2,7 +2,7 @@ package dev.cheun.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import dev.cheun.daos.AppUserDaoPostgres;
+import dev.cheun.daos.AppUserDaoHibernate;
 import dev.cheun.entities.AppUser;
 import dev.cheun.exceptions.NotAuthenticatedException;
 import dev.cheun.exceptions.NotFoundException;
@@ -13,7 +13,9 @@ import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
 
 public class LoginController {
-    private static final AppUserService aServ = new AppUserServiceImpl(new AppUserDaoPostgres());
+
+    private static final AppUserService aServ = new AppUserServiceImpl(
+            new AppUserDaoHibernate());
 
     public Handler loginHandler = ctx -> {
         String body = ctx.body();

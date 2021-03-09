@@ -2,12 +2,9 @@ package dev.cheun.controllers;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
-import dev.cheun.daos.AppUserDaoPostgres;
-import dev.cheun.daos.ExpenseDaoPostgres;
+import dev.cheun.daos.ExpenseDaoHibernate;
 import dev.cheun.entities.Expense;
 import dev.cheun.exceptions.NotFoundException;
-import dev.cheun.services.AppUserService;
-import dev.cheun.services.AppUserServiceImpl;
 import dev.cheun.services.ExpenseService;
 import dev.cheun.services.ExpenseServiceImpl;
 import dev.cheun.utils.DateTimeUtil;
@@ -17,8 +14,9 @@ import io.javalin.http.*;
 import java.util.Set;
 
 public class ExpenseController {
-    private AppUserService aServ = new AppUserServiceImpl(new AppUserDaoPostgres());
-    private ExpenseService eServ = new ExpenseServiceImpl(new ExpenseDaoPostgres());
+
+    private final ExpenseService eServ = new ExpenseServiceImpl(
+            new ExpenseDaoHibernate());
 
     public Handler getExpenseByUserIdHandler = ctx -> {
         int id = Integer.parseInt(ctx.pathParam("id"));
@@ -78,6 +76,8 @@ public class ExpenseController {
         Gson gson = new Gson();
         Expense expense = gson.fromJson(body, Expense.class);
         expense.setEmployeeId(id);
+        expense.setSubmittedAt(DateTimeUtil.getOffsetDateTimeUtcNow());
+        expense.setStatusId(1);
         Expense newExpense = eServ.createExpense(expense);
         ctx.result(gson.toJson(newExpense));
     };
@@ -121,12 +121,27 @@ public class ExpenseController {
             expense.setMgrReviewedAt(DateTimeUtil.getOffsetDateTimeUtcNow());
         }
 
-        Expense updatedExpense;
-        try {
-            updatedExpense = eServ.updateExpense(expense);
-        } catch (NotFoundException e) {
-            throw new NotFoundResponse(e.getMessage());
+        // Fill in the rest of expense.
+        if (expense.getStatusId() == 0) {
+            expense.setStatusId(currExpense.getStatusId());
         }
+        if (expense.getAmountInCents() == 0) {
+            expense.setAmountInCents(currExpense.getAmountInCents());
+        }
+        if (expense.getReason() == null) {
+            expense.setReason(currExpense.getReason());
+        }
+        if (expense.getSubmittedAt() == null) {
+            expense.setSubmittedAt(currExpense.getSubmittedAt());
+        }
+        if (expense.getMgrReviewedAt() == null) {
+            expense.setMgrReviewedAt(currExpense.getMgrReviewedAt());
+        }
+        if (expense.getManagerId() == null) {
+            expense.setManagerId(currExpense.getManagerId());
+        }
+
+        Expense updatedExpense = eServ.updateExpense(expense);
         ctx.result(gson.toJson(updatedExpense));
     };
 
@@ -147,8 +162,13 @@ public class ExpenseController {
         } catch (NotFoundException e) {
             throw new NotFoundResponse(e.getMessage());
         }
-        if (authRoleId == 1 && expense.getEmployeeId() != id) {
-            throw new ForbiddenResponse("Access denied");
+        if (authRoleId == 1) {
+            if (expense.getEmployeeId() != id) {
+                throw new ForbiddenResponse("Access denied");
+            }
+            if (expense.getStatusId() > 1) {
+                throw new BadRequestResponse("Cannot delete non-pending expenses");
+            }
         }
         boolean deleted = eServ.deleteExpenseById(eid);
         if (deleted) {
@@ -160,6 +180,8 @@ public class ExpenseController {
 
     private DecodedJWT extractAndCheckJWT(Context ctx) {
         String token;
+        // Token needs to be in the following form in the header:
+        // {"Authorization": "Bearer encoded_jwt"}
         try {
             token = ctx.header("Authorization").split(" ")[1];
         } catch (Exception e) {
