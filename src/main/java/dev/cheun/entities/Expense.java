@@ -117,7 +117,7 @@ public class Expense {
         this.employeeId = employeeId;
     }
 
-    public int getManagerId() {
+    public Integer getManagerId() {
         return this.managerId;
     }
 
