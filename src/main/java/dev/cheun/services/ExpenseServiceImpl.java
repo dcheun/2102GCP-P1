@@ -54,7 +54,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     public Expense updateExpense(Expense expense) {
         // If this is a manager updating, then check if the manager_id
         // set is a manager.
-        if (expense.getManagerId() != 0) {
+        if (expense.getManagerId() != null) {
             try {
                 aServ.getManagerById(expense.getManagerId());
             } catch (NotFoundException e) {
@@ -63,7 +63,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         }
         // Check if fields are modified by employee that they don't have access to.
         Expense currExpense = dao.getExpenseById(expense.getId());
-        if (expense.getManagerId() == 0 &&
+        if (expense.getManagerId() == null &&
                 expense.getStatusId() != currExpense.getStatusId() &&
                 expense.getMgrReviewedAt() != currExpense.getMgrReviewedAt() &&
                 expense.getReason() != null &&
