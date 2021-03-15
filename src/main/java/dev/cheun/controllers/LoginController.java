@@ -35,6 +35,8 @@ public class LoginController {
             throw new UnauthorizedResponse("Failed to authenticate user");
         }
         String jwt = JwtUtil.generate(authUser.getId(), authUser.getRoleId());
-        ctx.cookie("2102GCP_P1_jwt", jwt, 10000);
+        JsonObject jwtObj = new JsonObject();
+        jwtObj.addProperty("2102GCP_P1_jwt", jwt);
+        ctx.result(gson.toJson(jwtObj));
     };
 }

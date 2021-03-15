@@ -32,6 +32,8 @@ public class AppUserDaoHibernate implements AppUserDAO {
             sess.save(appUser); // Changes the object to have the new id.
             sess.getTransaction().commit();
             logger.info("createAppUser: " + appUser);
+            // Don't send back pw.
+            appUser.setPw(null);
             return appUser;
         } catch (Exception e) {
             AppUtil.logException(logger, e, "createAppUser: Unable to create");
@@ -49,6 +51,10 @@ public class AppUserDaoHibernate implements AppUserDAO {
             Query<AppUser> q = sess.createQuery(query);
             Set<AppUser> users = new HashSet<>(q.getResultList());
             logger.info("getAllAppUsers: size=" + users.size());
+            // Don't send back pw.
+            for (AppUser user : users) {
+                user.setPw(null);
+            }
             return users;
         } catch (Exception e) {
             AppUtil.logException(logger, e, "getAllAppUsers: Unable to retrieve");
@@ -65,6 +71,7 @@ public class AppUserDaoHibernate implements AppUserDAO {
                 throw new NotFoundException("No such user exists");
             }
             logger.info("getAppUserById: id=" + id);
+            user.setPw(null);   // don't send back pw.
             return user;
         } catch (NotFoundException e) {
             logger.warn("getAppUserById: Not found: id=" + id);
@@ -88,6 +95,8 @@ public class AppUserDaoHibernate implements AppUserDAO {
                 throw new NotAuthenticatedException("Failed to authenticate user");
             }
             logger.info("authenticate: " + appUser);
+            // Don't send back pw.
+            appUser.setPw(null);
             return appUser;
         } catch (NotAuthenticatedException e) {
             logger.warn("authenticate: Failed to authenticate: " + appUser);
@@ -109,6 +118,8 @@ public class AppUserDaoHibernate implements AppUserDAO {
             sess.update(appUser);
             sess.getTransaction().commit();
             logger.info("updateAppUser: " + appUser);
+            // Don't send back pw.
+            appUser.setPw(null);
             return appUser;
         } catch (NotFoundException e) {
             logger.warn("updateAppUser: Not found: id=" + appUser.getId());

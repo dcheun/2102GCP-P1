@@ -5,7 +5,12 @@ import io.javalin.Javalin;
 
 public class App {
     public static void main(String[] args) {
-        Javalin app = Javalin.create();
+        Javalin app = Javalin.create(
+                config -> {
+                    // Allows the server to process JS requests from anywhere.
+                    config.enableCorsForAllOrigins();
+                }
+        );
 
         AppUserController userController = new AppUserController();
         AppUserRoleController roleController = new AppUserRoleController();
@@ -34,4 +39,5 @@ public class App {
 
         app.start();
     }
+
 }

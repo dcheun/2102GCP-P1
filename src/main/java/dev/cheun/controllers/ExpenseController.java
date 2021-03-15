@@ -79,7 +79,7 @@ public class ExpenseController {
         expense.setSubmittedAt(DateTimeUtil.getOffsetDateTimeUtcNow());
         expense.setStatusId(1);
         Expense newExpense = eServ.createExpense(expense);
-        ctx.result(gson.toJson(newExpense));
+        ctx.status(201).result(gson.toJson(newExpense));
     };
 
     public Handler updateExpenseByUserIdHandler = ctx -> {
