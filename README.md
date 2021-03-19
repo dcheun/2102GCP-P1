@@ -16,7 +16,7 @@ This is the backend repository. The frontend is in a separate repository.
 - JDBC
 - Javalin (deployed on GCP Compute VM)
 - Hibernate
-- JSON Web Tokens
+- JWT - JSON Web Token
 
 ## Features
 
@@ -29,7 +29,7 @@ The main table can be sorted on the following columns:
 
 The search bar provides search/filter capabilities on all of the columns.
 
-From here, the user can switch to a "statistics" view by clicking on the dropdown menu from their avatar on the top navbar. The user can also logout from this dropdown menu, which will delete the JWT.
+From here, the user can switch to a "statistics" view by clicking on the dropdown menu from their avatar on the top navbar. The user can also logout from this dropdown menu, which will delete the JWT. Once the JWT is deleted, the user will need to login again to access the dashboard.
 
 Valid expense statuses are:
 - Pending
@@ -61,6 +61,15 @@ This will build the artifact into the *build/libs* folder. To run the jar:
 ```
 java -jar build/libs/<name_of_jar_file>
 ```
+
+## Usage
+
+The main RESTful API endpoints provided are in the form:
+- BASE_URL/users/login
+- BASE_URL/users
+- BASE_URL/users/:id/expenses (protected - requires JWT Authentication in header)
+
+Once the javalin server is running, it will begin to serve HTTP API requests.
 
 ### Testing
 
